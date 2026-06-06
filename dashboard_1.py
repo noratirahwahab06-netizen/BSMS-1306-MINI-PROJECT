@@ -101,17 +101,3 @@ fig_scatter = px.scatter(
 # Render the Plotly chart in Streamlit
 st.plotly_chart(fig_scatter, use_container_width=True)
 
-import streamlit as nn
-import pandas as pd
-
-# Sample Data
-data = {
-    'Category': ['A', 'B', 'C', 'D'],
-    'Values': [25, 40, 15, 30]
-}
-df = pd.DataFrame(data)
-
-st.title("📊 Simple Interactive Bar Chart")
-
-# Render the bar chart (setting Category as the x-axis index)
-st.bar_chart(df.set_index('Category'))
