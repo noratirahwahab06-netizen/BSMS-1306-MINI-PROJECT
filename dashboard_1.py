@@ -101,3 +101,39 @@ fig_scatter = px.scatter(
 # Render the Plotly chart in Streamlit
 st.plotly_chart(fig_scatter, use_container_width=True)
 
+import streamlit as st
+import plotly.express as px
+
+# Assuming 'df' is your loaded DataFrame
+# df = pd.read_csv("your_data.csv") 
+
+st.header("📊 Bar Chart Analysis")
+
+# 1. Let the user select the columns for the axes
+# Grouping by a categorical column (like Gender or Smoke) works best for bar charts
+x_axis_bar = st.selectbox("Choose X-axis (Categorical):", options=df.columns, index=0)
+y_axis_bar = st.selectbox("Choose Y-axis (Numerical):", options=df.columns, index=1)
+
+# 2. Let the user choose an aggregation method
+aggr_func = st.selectbox("Aggregation Method:", ["Mean", "Sum", "Count"])
+
+# 3. Process data based on selection
+if aggr_func == "Mean":
+    df_grouped = df.groupby(x_axis_bar)[y_axis_bar].mean().reset_index()
+elif aggr_func == "Sum":
+    df_grouped = df.groupby(x_axis_bar)[y_axis_bar].sum().reset_index()
+else:
+    df_grouped = df.groupby(x_axis_bar)[y_axis_bar].count().reset_index()
+    df_grouped.rename(columns={y_axis_bar: "Count"}, inplace=True)
+    y_axis_bar = "Count"
+
+# 4. Create and display the Plotly Bar Chart
+fig_bar = px.bar(
+    df_grouped, 
+    x=x_axis_bar, 
+    y=y_axis_bar, 
+    color=x_axis_bar,
+    title=f"{aggr_func} of {y_axis_bar} by {x_axis_bar}"
+)
+
+st.plotly_chart(fig_bar, use_container_width=True)
