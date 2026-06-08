@@ -161,7 +161,7 @@ import plotly.express as px
 # to match your exact dataset columns.
 
 required_columns = ['Technology Use', 'Physical Activity', 'Commute Type']
-if all(col in df.columns for col in required_columns):
+    if all(col in df.columns for col in required_columns):
 
 import streamlit as st
 import pandas as pd
