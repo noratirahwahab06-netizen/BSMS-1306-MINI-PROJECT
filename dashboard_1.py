@@ -43,39 +43,55 @@ st.pyplot(fig)
 #fig = px.scatter(df, x=x_column, y = y_column,color ='sex' , color_discrete_sequence= ['yellow', 'red'])
 #st.plotly_chart(fig)
 
-import streamlit as tf
+import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-# ... (Your existing code to load your dataset 'df') ...
+# --- 1. Data Preparation ---
+# (Make sure 'df' is the name of your loaded DataFrame)
 
-st.title("Welcome to my Dashboard")
-st.write("This is my first time using streamlit.")
+# Calculate BMI if it doesn't already exist
+if 'BMI' not in df.columns and 'Weight' in df.columns and 'Height' in df.columns:
+    df['BMI'] = df['Weight'] / (df['Height'] ** 2)
 
-# --- RAW DATA SECTION ---
-st.subheader("Raw Data")
-st.dataframe(df.head()) # Keeps your data table neat
+# Create Age Groups
+if 'Age' in df.columns:
+    # Define the boundaries and names for your age groups
+    bins = [0, 29, 39, 49, 59, 100]
+    labels = ['Under 30', '30-39', '40-49', '50-59', '60+']
+    df['Age Group'] = pd.cut(df['Age'], bins=bins, labels=labels)
 
-# --- INTERACTIVE HISTOGRAM SECTION ---
-st.header("📊 Histogram Analysis")
+    # --- 2. Interactive Bar Chart Section ---
+    st.header("📊 Age Group vs. Average BMI")
+    st.write("This interactive chart displays the calculated average Body Mass Index (BMI) across different age demographics.")
 
-# Your existing dropdown selector
-hist_col = st.selectbox("Choose a column for the histogram:", options=["Age", "Height", "Weight", "CH2O"])
+    # Calculate the average BMI for each age group
+    df_avg_bmi = df.groupby('Age Group', as_index=False)['BMI'].mean()
 
-# Create the interactive Plotly histogram
-fig_hist = px.histogram(
-    df, 
-    x=hist_col, 
-    color="Gender",          # Automatically splits data by gender using different colors!
-    marginal="box",          # Adds a mini box-plot right on top of the histogram
-    hover_data=df.columns,   # Shows all data details when hovering over a bar
-    template="plotly_dark"   # Matches Streamlit's dark theme perfectly
-)
+    # Build the interactive bar chart using Plotly Express
+    fig = px.bar(
+        df_avg_bmi,
+        x='Age Group',
+        y='BMI',
+        title='Average BMI by Age Group',
+        labels={'BMI': 'Average BMI', 'Age Group': 'Age Cohort'},
+        color='Age Group',             # Colors each bar differently
+        text_auto='.2f',               # Displays the exact BMI value on top of each bar
+        template='plotly_dark'         # Matches your dark theme dashboard
+    )
 
-# Render the Plotly chart in Streamlit
-st.plotly_chart(fig_hist, use_container_width=True)
+    # Clean up layout appearance
+    fig.update_layout(
+        xaxis_title="Age Group",
+        yaxis_title="Average BMI",
+        showlegend=False               # Disables redundant legend since X-axis has labels
+    )
 
+    # Display the chart dynamically inside Streamlit
+    st.plotly_chart(fig, use_container_width=True)
 
+else:
+    st.error("Could not find the 'Age' column in your dataset to generate age groups.")
 # --- INTERACTIVE SCATTER CHART SECTION ---
 st.header("🎯 Scatter Chart Analysis")
 
