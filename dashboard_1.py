@@ -92,6 +92,7 @@ if 'Age' in df.columns:
 
 else:
     st.error("Could not find the 'Age' column in your dataset to generate age groups.")
+
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -99,58 +100,59 @@ import plotly.express as px
 # --- 1. Data Preparation & Classification ---
 # (Assumes 'df' is your existing DataFrame)
 
-# 1a. Ensure BMI is calculated
+# Ensure BMI is calculated
 if 'BMI' not in df.columns and 'Weight' in df.columns and 'Height' in df.columns:
     df['BMI'] = df['Weight'] / (df['Height'] ** 2)
 
-# 1b. Create Age Groups (if not already created)
+# Create Age Groups
 if 'Age Group' not in df.columns and 'Age' in df.columns:
     bins = [0, 29, 39, 49, 59, 100]
     labels = ['Under 30', '30-39', '40-49', '50-59', '60+']
     df['Age Group'] = pd.cut(df['Age'], bins=bins, labels=labels)
 
-# 1c. Create Obesity Categories based on standard medical thresholds
+# Create Obesity Categories
 if 'BMI' in df.columns and 'Age Group' in df.columns:
     bmi_bins = [0, 18.5, 24.9, 29.9, float('inf')]
     bmi_labels = ['Underweight', 'Normal weight', 'Overweight', 'Obese']
     df['Obesity Category'] = pd.cut(df['BMI'], bins=bmi_bins, labels=bmi_labels, right=True)
 
     # --- 2. Aggregating the Data ---
-    # Group by Age Group and Obesity Category to get total counts for each stack
-    df_counts = df.groupby(['Age Group', 'Obesity Category'], as_index=False).size()
+    df_counts = df.groupby(['Obesity Category', 'Age Group'], as_index=False).size()
     df_counts.rename(columns={'size': 'Count'}, inplace=True)
 
-    # --- 3. Interactive Stacked Bar Chart ---
-    st.header("📊 Age Group vs. Obesity Distribution")
-    st.write("This interactive stacked bar chart illustrates how different weight status categories are distributed across age demographics.")
+    # --- 3. Interactive Stacked Bar Chart (Obesity Categories on X-Axis) ---
+    st.header("📊 Obesity Categories vs. Age Distribution")
+    st.write("This interactive chart displays the breakdown of age groups within each weight status category.")
 
     fig = px.bar(
         df_counts,
-        x='Age Group',
+        x='Obesity Category',   # Swapped to X-axis
         y='Count',
-        color='Obesity Category',
-        title='Distribution of Obesity Categories by Age Group',
+        color='Age Group',       # Swapped to Stack Colors
+        title='Age Group Distribution across Obesity Categories',
         labels={'Count': 'Number of People', 'Age Group': 'Age Cohort', 'Obesity Category': 'Weight Category'},
-        # This forces the legend order to look professional (from Underweight up to Obese)
         category_orders={'Obesity Category': ['Underweight', 'Normal weight', 'Overweight', 'Obese']},
-        template='plotly_dark',       # Matches your dark UI dashboard theme
-        color_discrete_sequence=px.colors.qualitative.Pastel # Smooth, legible color palette
+        template='plotly_dark',
+        color_discrete_sequence=px.colors.qualitative.Set2  # Clean, readable color palette
     )
 
     # Customize layout settings
     fig.update_layout(
-        barmode='stack',              # Stacks the categories on top of each other
-        xaxis_title="Age Group",
+        barmode='stack',              # Stacks the age groups together
+        xaxis_title="Obesity Category",
         yaxis_title="Number of Individuals",
-        legend_title="Weight Status",
-        hovermode="x unified"         # Merges hover text to see all categories at once per age group
+        legend_title="Age Cohort",
+        hovermode="x unified"         # Shows all age group counts simultaneously on hover
     )
+
+    # Optional: Uncomment the line below if you want a 100% proportional view instead of raw counts
+    # fig.update_layout(barnorm='percent')
 
     # Render inside Streamlit
     st.plotly_chart(fig, use_container_width=True)
 
 else:
-    st.error("Required data columns ('Age', 'Weight', or 'Height') are missing from the dataset.")
+    st.error("Required data columns are missing from the dataset.")
 
 st.header("📊 Bar Chart Analysis")
 
