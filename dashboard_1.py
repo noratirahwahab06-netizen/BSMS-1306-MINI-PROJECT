@@ -163,32 +163,43 @@ import plotly.express as px
 required_columns = ['Technology Use', 'Physical Activity', 'Commute Type']
 if all(col in df.columns for col in required_columns):
 
-    # --- 2. Interactive Scatter Plot Section ---
-    st.header("📊 Technology Use vs. Physical Activity")
-    st.write("This interactive scatter plot explores the correlation between daily technology use and physical activity levels, broken down by commute types.")
+import streamlit as st
+import pandas as pd
+import plotly.express as px
+
+# --- Interactive Scatter Plot Section ---
+# Checking if the correct abbreviated columns exist in your DataFrame (df)
+required_cols = ['FAF', 'TUE']
+
+if all(col in df.columns for col in required_cols):
+    st.header("📊 Technology Use vs. Physical Activity (FAF vs. TUE)")
+    st.write("This interactive scatter plot explores the correlation between Time Using Technology Devices (TUE) and Physical Activity Frequency (FAF).")
+
+    # Use 'MTRANS' for commute type if it exists, otherwise plot without color grouping
+    color_col = 'MTRANS' if 'MTRANS' in df.columns else None
 
     fig = px.scatter(
         df,
-        x='Physical Activity',
-        y='Technology Use',
-        color='Commute Type',           # Groups and colors points by commute type
-        title='Correlation Between Technology Use and Physical Activity Across Commute Types',
+        x='FAF',                         # Physical Activity Frequency on X-axis
+        y='TUE',                         # Technology Use on Y-axis
+        color=color_col,                 # Groups and colors points by Transportation Mode
+        title='Correlation Between Technology Use (TUE) and Physical Activity (FAF)',
         labels={
-            'Physical Activity': 'Physical Activity Level (mins/day)',
-            'Technology Use': 'Technology Use (hours/day)',
-            'Commute Type': 'Commute Category'
+            'FAF': 'Physical Activity Frequency (FAF)',
+            'TUE': 'Time Using Technology Devices (TUE)',
+            'MTRANS': 'Commute Type (MTRANS)'
         },
-        opacity=0.7,                    # Blends overlapping points slightly for better visibility
-        template='plotly_dark',         # Matches your dark dashboard theme
+        opacity=0.7,                     # Helps visualize overlapping data points
+        template='plotly_dark',          # Matches your dark dashboard theme
         color_discrete_sequence=px.colors.qualitative.Safe
     )
 
-    # Customize layout and add a trendline marker look
+    # Customize the appearance of the scatter plot markers
     fig.update_traces(marker=dict(size=10, line=dict(width=1, color='DarkSlateGrey')))
     
     fig.update_layout(
-        xaxis_title="Physical Activity Level",
-        yaxis_title="Technology Use",
+        xaxis_title="Physical Activity Frequency (FAF)",
+        yaxis_title="Time Using Technology (TUE)",
         legend_title="Commute Type",
         hovermode="closest"
     )
@@ -197,4 +208,4 @@ if all(col in df.columns for col in required_columns):
     st.plotly_chart(fig, use_container_width=True)
 
 else:
-    st.error("Missing required columns. Please check if 'Technology Use', 'Physical Activity', and 'Commute Type' exist in your dataset.")
+    st.error("Missing required columns. Please ensure 'FAF' and 'TUE' exist in your dataset.")
