@@ -151,33 +151,50 @@ if 'BMI' in df.columns and 'Age Group' in df.columns:
 else:
     st.error("Required data columns are missing from the dataset.")
 
-st.header("📊 Bar Chart Analysis")
+import streamlit as st
+import pandas as pd
+import plotly.express as px
 
-# 1. Let the user select the columns for the axes
-# Grouping by a categorical column (like Gender or Smoke) works best for bar charts
-x_axis_bar = st.selectbox("Choose X-axis (Categorical):", options=df.columns, index=0)
-y_axis_bar = st.selectbox("Choose Y-axis (Numerical):", options=df.columns, index=1)
+# --- 1. Data Validation ---
+# (Assumes 'df' is your existing DataFrame)
+# Adjust column names ('Technology Use', 'Physical Activity', 'Commute Type') 
+# to match your exact dataset columns.
 
-# 2. Let the user choose an aggregation method
-aggr_func = st.selectbox("Aggregation Method:", ["Mean", "Sum", "Count"])
+required_columns = ['Technology Use', 'Physical Activity', 'Commute Type']
+if all(col in df.columns for col in required_columns):
 
-# 3. Process data based on selection
-if aggr_func == "Mean":
-    df_grouped = df.groupby(x_axis_bar)[y_axis_bar].mean().reset_index()
-elif aggr_func == "Sum":
-    df_grouped = df.groupby(x_axis_bar)[y_axis_bar].sum().reset_index()
+    # --- 2. Interactive Scatter Plot Section ---
+    st.header("📊 Technology Use vs. Physical Activity")
+    st.write("This interactive scatter plot explores the correlation between daily technology use and physical activity levels, broken down by commute types.")
+
+    fig = px.scatter(
+        df,
+        x='Physical Activity',
+        y='Technology Use',
+        color='Commute Type',           # Groups and colors points by commute type
+        title='Correlation Between Technology Use and Physical Activity Across Commute Types',
+        labels={
+            'Physical Activity': 'Physical Activity Level (mins/day)',
+            'Technology Use': 'Technology Use (hours/day)',
+            'Commute Type': 'Commute Category'
+        },
+        opacity=0.7,                    # Blends overlapping points slightly for better visibility
+        template='plotly_dark',         # Matches your dark dashboard theme
+        color_discrete_sequence=px.colors.qualitative.Safe
+    )
+
+    # Customize layout and add a trendline marker look
+    fig.update_traces(marker=dict(size=10, line=dict(width=1, color='DarkSlateGrey')))
+    
+    fig.update_layout(
+        xaxis_title="Physical Activity Level",
+        yaxis_title="Technology Use",
+        legend_title="Commute Type",
+        hovermode="closest"
+    )
+
+    # Render inside Streamlit
+    st.plotly_chart(fig, use_container_width=True)
+
 else:
-    df_grouped = df.groupby(x_axis_bar)[y_axis_bar].count().reset_index()
-    df_grouped.rename(columns={y_axis_bar: "Count"}, inplace=True)
-    y_axis_bar = "Count"
-
-# 4. Create and display the Plotly Bar Chart
-fig_bar = px.bar(
-    df_grouped, 
-    x=x_axis_bar, 
-    y=y_axis_bar, 
-    color=x_axis_bar,
-    title=f"{aggr_func} of {y_axis_bar} by {x_axis_bar}"
-)
-
-st.plotly_chart(fig_bar, use_container_width=True)
+    st.error("Missing required columns. Please check if 'Technology Use', 'Physical Activity', and 'Commute Type' exist in your dataset.")
