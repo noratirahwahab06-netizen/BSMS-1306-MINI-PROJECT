@@ -92,36 +92,65 @@ if 'Age' in df.columns:
 
 else:
     st.error("Could not find the 'Age' column in your dataset to generate age groups.")
-# --- INTERACTIVE SCATTER CHART SECTION ---
-st.header("🎯 Scatter Chart Analysis")
-
-# Your existing X and Y axis dropdown selectors
-col1, col2 = st.columns(2)
-with col1:
-    x_axis = st.selectbox("Choose x-axis column:", options=["Age", "Height", "Weight", "CH2O"], index=1) # Default to Height
-with col2:
-    y_axis = st.selectbox("Choose y-axis column:", options=["Age", "Height", "Weight", "CH2O"], index=2) # Default to Weight
-
-# Create the interactive Plotly scatter plot
-fig_scatter = px.scatter(
-    df, 
-    x=x_axis, 
-    y=y_axis, 
-    color="SMOKE",           # Colors dots based on smoking status (adds a whole new layer of insight!)
-    size="Age",              # Larger dots mean older individuals
-    hover_name="Gender",     # Puts Gender right at the top of the hover card
-    trendline="ols",      # Optional: uncomment if you install statsmodels to see a trendline
-    template="plotly_dark"
-)
-
-# Render the Plotly chart in Streamlit
-st.plotly_chart(fig_scatter, use_container_width=True)
-
 import streamlit as st
+import pandas as pd
 import plotly.express as px
 
-# Assuming 'df' is your loaded DataFrame
-# df = pd.read_csv("your_data.csv") 
+# --- 1. Data Preparation & Classification ---
+# (Assumes 'df' is your existing DataFrame)
+
+# 1a. Ensure BMI is calculated
+if 'BMI' not in df.columns and 'Weight' in df.columns and 'Height' in df.columns:
+    df['BMI'] = df['Weight'] / (df['Height'] ** 2)
+
+# 1b. Create Age Groups (if not already created)
+if 'Age Group' not in df.columns and 'Age' in df.columns:
+    bins = [0, 29, 39, 49, 59, 100]
+    labels = ['Under 30', '30-39', '40-49', '50-59', '60+']
+    df['Age Group'] = pd.cut(df['Age'], bins=bins, labels=labels)
+
+# 1c. Create Obesity Categories based on standard medical thresholds
+if 'BMI' in df.columns and 'Age Group' in df.columns:
+    bmi_bins = [0, 18.5, 24.9, 29.9, float('inf')]
+    bmi_labels = ['Underweight', 'Normal weight', 'Overweight', 'Obese']
+    df['Obesity Category'] = pd.cut(df['BMI'], bins=bmi_bins, labels=bmi_labels, right=True)
+
+    # --- 2. Aggregating the Data ---
+    # Group by Age Group and Obesity Category to get total counts for each stack
+    df_counts = df.groupby(['Age Group', 'Obesity Category'], as_index=False).size()
+    df_counts.rename(columns={'size': 'Count'}, inplace=True)
+
+    # --- 3. Interactive Stacked Bar Chart ---
+    st.header("📊 Age Group vs. Obesity Distribution")
+    st.write("This interactive stacked bar chart illustrates how different weight status categories are distributed across age demographics.")
+
+    fig = px.bar(
+        df_counts,
+        x='Age Group',
+        y='Count',
+        color='Obesity Category',
+        title='Distribution of Obesity Categories by Age Group',
+        labels={'Count': 'Number of People', 'Age Group': 'Age Cohort', 'Obesity Category': 'Weight Category'},
+        # This forces the legend order to look professional (from Underweight up to Obese)
+        category_orders={'Obesity Category': ['Underweight', 'Normal weight', 'Overweight', 'Obese']},
+        template='plotly_dark',       # Matches your dark UI dashboard theme
+        color_discrete_sequence=px.colors.qualitative.Pastel # Smooth, legible color palette
+    )
+
+    # Customize layout settings
+    fig.update_layout(
+        barmode='stack',              # Stacks the categories on top of each other
+        xaxis_title="Age Group",
+        yaxis_title="Number of Individuals",
+        legend_title="Weight Status",
+        hovermode="x unified"         # Merges hover text to see all categories at once per age group
+    )
+
+    # Render inside Streamlit
+    st.plotly_chart(fig, use_container_width=True)
+
+else:
+    st.error("Required data columns ('Age', 'Weight', or 'Height') are missing from the dataset.")
 
 st.header("📊 Bar Chart Analysis")
 
