@@ -120,33 +120,30 @@ if 'BMI' in df.columns and 'Age Group' in df.columns:
     df_counts = df.groupby(['Obesity Category', 'Age Group'], as_index=False).size()
     df_counts.rename(columns={'size': 'Count'}, inplace=True)
 
-    # --- 3. Interactive Stacked Bar Chart (Obesity Categories on X-Axis) ---
-    st.header("📊 Obesity Categories vs. Age Distribution")
-    st.write("This interactive chart displays the breakdown of age groups within each weight status category.")
+    # --- 3. Interactive Grouped Bar Chart ---
+    st.header("📊 Obesity Categories vs. Age Distribution (Grouped)")
+    st.write("This interactive grouped bar chart displays age groups side-by-side within each weight status category for easier direct comparison.")
 
     fig = px.bar(
         df_counts,
-        x='Obesity Category',   # Swapped to X-axis
+        x='Obesity Category',   
         y='Count',
-        color='Age Group',       # Swapped to Stack Colors
-        title='Age Group Distribution across Obesity Categories',
+        color='Age Group',       
+        title='Age Group Comparison across Obesity Categories',
         labels={'Count': 'Number of People', 'Age Group': 'Age Cohort', 'Obesity Category': 'Weight Category'},
         category_orders={'Obesity Category': ['Underweight', 'Normal weight', 'Overweight', 'Obese']},
         template='plotly_dark',
-        color_discrete_sequence=px.colors.qualitative.Set2  # Clean, readable color palette
+        color_discrete_sequence=px.colors.qualitative.Set2  
     )
 
     # Customize layout settings
     fig.update_layout(
-        barmode='stack',              # Stacks the age groups together
+        barmode='group',              # <--- CHANGED THIS FROM 'stack' TO 'group'
         xaxis_title="Obesity Category",
         yaxis_title="Number of Individuals",
         legend_title="Age Cohort",
-        hovermode="x unified"         # Shows all age group counts simultaneously on hover
+        hovermode="x unified"         
     )
-
-    # Optional: Uncomment the line below if you want a 100% proportional view instead of raw counts
-    # fig.update_layout(barnorm='percent')
 
     # Render inside Streamlit
     st.plotly_chart(fig, use_container_width=True)
