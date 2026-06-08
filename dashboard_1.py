@@ -151,17 +151,6 @@ if 'BMI' in df.columns and 'Age Group' in df.columns:
 else:
     st.error("Required data columns are missing from the dataset.")
 
-import streamlit as st
-import pandas as pd
-import plotly.express as px
-
-# --- 1. Data Validation ---
-# (Assumes 'df' is your existing DataFrame)
-# Adjust column names ('Technology Use', 'Physical Activity', 'Commute Type') 
-# to match your exact dataset columns.
-
-required_columns = ['Technology Use', 'Physical Activity', 'Commute Type']
-    if all(col in df.columns for col in required_columns):
 
 import streamlit as st
 import pandas as pd
